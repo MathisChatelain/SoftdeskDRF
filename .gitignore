@@ -1,1 +1,60 @@
 /env
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Caches and temporary files
+*.log
+*.pot
+*.pyo
+*.pyd
+*.swp
+*.db
+
+# Static files (collectstatic)
+/static/
+
+# Media files
+/media/
+
+# Secret settings file
+secret_settings.py
+
+# Virtual environment
+venv/
+env/
+.venv/
+env.bak/
+.python-version
+
+# Development-specific files
+*.env
+*.env.*
+local_settings.py
+
+# Ignore sensitive or environment-specific information
+settings.ini
+*.secret
+
+# Ignore IDE and editor files
+.vscode/
+.idea/
+*.sublime*
+*.pyc
+*.suo
+*.ntvs*
+
+# Ignore macOS specific files
+.DS_Store
+
+# Ignore compiled JavaScript
+*.js.map
+
+# Ignore compiled CSS
+*.css.map
+
+# Ignore Heroku specific files
+*.slugignore
+*.buildinfo

@@ -1,8 +1,32 @@
 from django.db import models
 from django.contrib.auth.models import User
+from datetime import datetime
+from uuid import uuid4
 
 
-class CustomUser(User):
+class BaseModel(models.Model):
+    """
+    Classe abstraite qui définit les champs communs à tous les modèles.
+    """
+
+    uuid = models.UUIDField(
+        primary_key=True, editable=False, unique=True, default=uuid4()
+    )
+    created_at = models.DateTimeField(editable=False, default=datetime.now())
+    updated_at = models.DateTimeField(default=datetime.now())
+
+    def save(self, *args, **kwargs):
+        """On save, update timestamps"""
+        if not self.id:
+            self.created_at = datetime.now()
+        self.updated_at = datetime.now()
+        return super(BaseModel, self).save(*args, **kwargs)
+
+    class Meta:
+        abstract = True
+
+
+class CustomUser(User, BaseModel):
     """
     Définit les utilisateurs, avec leur âge, leur choix de consentement
     Les données d'authentification sont gérées par Django
@@ -13,7 +37,7 @@ class CustomUser(User):
     can_data_be_shared = models.BooleanField(default=False)
 
 
-class Project(models.Model):
+class Project(BaseModel):
     """
     Définit les projets, avec leur nom, leur date de création et leur date de
     mise à jour. Un projet peut avoir plusieurs contributeurs.
@@ -29,7 +53,7 @@ class Project(models.Model):
     description = models.TextField()
 
 
-class Contributor(models.Model):
+class Contributor(BaseModel):
     """
     Définit les utilisateurs qui sont contributeurs d'un projet spécifique… Un utilisateur peut
     contribuer à plusieurs projets, et un projet peut avoir plusieurs contributeurs. Le
@@ -43,7 +67,7 @@ class Contributor(models.Model):
         unique_together = ["user", "project"]
 
 
-class Issue(models.Model):
+class Issue(BaseModel):
     """
     Définit les problèmes d'un projet, ainsi que son statut, sa priorité, son attribution
     (utilisateur auquel le problème est affecté), sa balise (bug, tâche, amélioration).
@@ -58,7 +82,7 @@ class Issue(models.Model):
     contributor = models.ForeignKey("Contributor", on_delete=models.CASCADE)
 
 
-class Comment(models.Model):
+class Comment(BaseModel):
     """
     Définit les commentaires d'un problème (issue) particulier. Une issue peut avoir
     plusieurs comments, mais un comment n'est rattaché qu'à une seule issue.
