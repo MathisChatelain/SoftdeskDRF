@@ -1,7 +1,11 @@
 /env
+./env
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
+__pycache__/**/*
+*/__pycache__/*
 *.py[cod]
 *$py.class
 
@@ -14,7 +18,8 @@ __pycache__/
 *.db
 
 # Static files (collectstatic)
-/static/
+*/static/
+*/staticfiles/
 
 # Media files
 /media/

@@ -1,0 +1,24 @@
+{% extends "auth_base.html" %}
+
+{% block content %}
+
+<header>
+    <h1>Litrevu</h1>
+</header>
+
+<table class="height-100">
+    <tr>
+        <td>
+            <h2>Inscrivez-vous</h2>
+            <p>{{ message }}</p>
+            <form method="post">
+                {{ form.as_p }}
+                {% csrf_token %}
+                <button type="submit" >S'inscrire</button>
+                <a href="{% url 'login' %}"><button type="button">Retourner</button></a>
+            </form>
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
