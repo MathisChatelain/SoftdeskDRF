@@ -17,7 +17,7 @@ class BaseModel(models.Model):
 
     def save(self, *args, **kwargs):
         """On save, update timestamps"""
-        if not self.id:
+        if not self.uuid:
             self.created_at = datetime.now()
         self.updated_at = datetime.now()
         return super(BaseModel, self).save(*args, **kwargs)

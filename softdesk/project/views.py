@@ -12,7 +12,6 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 class ProjectViewset(ModelViewSet):
     serializer_class = ProjectSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get_queryset(self):
         return Project.objects.all()
