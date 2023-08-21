@@ -1,13 +1,19 @@
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+from rest_framework.views import APIView
 from project.models import Project, CustomUser, Contributor, Issue, Comment
 from project.serializers import (
     ProjectSerializer,
     CustomUserSerializer,
+    CustomUserSignupSerializer,
     ContributorSerializer,
     IssueSerializer,
     CommentSerializer,
 )
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+
+
+class SignupView(APIView):
+    serializer_class = CustomUserSignupSerializer
 
 
 class ProjectViewset(ModelViewSet):
