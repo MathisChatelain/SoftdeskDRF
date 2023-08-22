@@ -16,6 +16,16 @@ class CustomUserSignupSerializer(CustomUserSerializer):
 
     password_confirmation = CharField()
 
+    class Meta:
+        model = CustomUser
+        fields = (
+            "username",
+            "password",
+            "password_confirmation",
+            "can_be_contacted",
+            "can_data_be_shared",
+        )
+
 
 class ProjectSerializer(ModelSerializer):
     """Return a project serializer with every field."""

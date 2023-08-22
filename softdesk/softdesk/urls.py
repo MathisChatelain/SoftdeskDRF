@@ -6,7 +6,7 @@ from rest_framework.schemas import get_schema_view
 from django.contrib.auth.views import LoginView, LogoutView
 
 from project.views import (
-    SignupView,
+    signup,
     ProjectViewset,
     CustomUserViewset,
     ContributorViewset,
@@ -26,7 +26,7 @@ urlpatterns = [
     path("api-auth/", include("rest_framework.urls")),
     path("", LoginView.as_view(), name="login", kwargs={"next_page": "/api/"}),
     path("logout/", LogoutView.as_view(), name="logout"),
-    path("signup/", SignupView.as_view(), name="signup"),
+    path("signup/", signup, name="signup"),
     path("api/", include(router.urls)),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

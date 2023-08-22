@@ -1,4 +1,5 @@
 {% extends "auth_base.html" %}
+{% load rest_framework %}
 
 {% block content %}
 
@@ -12,8 +13,8 @@
             <h2>Inscrivez-vous</h2>
             <p>{{ message }}</p>
             <form method="post">
-                {{ form.as_p }}
                 {% csrf_token %}
+                {% render_form form %}
                 <button type="submit" >S'inscrire</button>
                 <a href="{% url 'login' %}"><button type="button">Retourner</button></a>
             </form>
