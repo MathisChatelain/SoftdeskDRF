@@ -14,7 +14,7 @@
             <p>{{ message }}</p>
             <form method="post">
                 {% csrf_token %}
-                {% render_form form %}
+                {% render_form form template_pack='rest_framework/inline' %}
                 <button type="submit" >S'inscrire</button>
                 <a href="{% url 'login' %}"><button type="button">Retourner</button></a>
             </form>
