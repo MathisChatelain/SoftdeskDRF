@@ -1,5 +1,4 @@
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-from rest_framework.views import APIView
 from project.models import Project, CustomUser, Contributor, Issue, Comment
 from project.serializers import (
     ProjectSerializer,
@@ -9,37 +8,48 @@ from project.serializers import (
     IssueSerializer,
     CommentSerializer,
 )
+from rest_framework_simplejwt.serializers import TokenObtainSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate
 from django.shortcuts import redirect, render
+
 
 def signup(request):
     form = CustomUserSignupSerializer()
     message = ""
+    has_error = False
     if request.method == "POST":
         form = CustomUserSignupSerializer(data=request.POST)
-        if form.is_valid():
+        is_valid = form.is_valid()
+        if is_valid:
             # We authenticate the user to log him in if the account already exists
-            user = authenticate(
-                username=form.cleaned_data["username"],
-                password=form.cleaned_data["password"],
+            user = CustomUser.objects.filter(
+                username=form.data["username"],
+                password=form.data["password"],
             )
-            if user is not None:
-                login(request, user)
-                return redirect("api/")
+            if len(user) == 1:
+                TokenObtainSerializer(data=form.data)
+                return redirect("/api/")
             else:
                 # We create the user if it does not exist
                 user = CustomUser.objects.create_user(
-                    username=form.cleaned_data["username"],
-                    password=form.cleaned_data["password"],
+                    username=form.data["username"],
+                    password=form.data["password"],
                 )
+                authenticate(
+                    username=form.data["username"],
+                    password=form.data["password"],
+                )
+                TokenObtainSerializer(data=form.data)
                 user.save()
-                login(request, user)
-                return redirect("api/")
+                return redirect("/api/")
+        else:
+            message = "Please correct the errors below"
+            has_error = True
     return render(
         request,
         "registration/signup.html",
-        context={"form": form, "message": message},
+        context={"form": form, "message": message, "has_error": has_error},
     )
 
 

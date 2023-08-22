@@ -10,14 +10,22 @@
 <table class="height-100">
     <tr>
         <td>
-            <h2>Inscrivez-vous</h2>
+            <h2>Singup</h2>
             <p>{{ message }}</p>
             <form method="post">
                 {% csrf_token %}
                 {% render_form form template_pack='rest_framework/inline' %}
-                <button type="submit" >S'inscrire</button>
-                <a href="{% url 'login' %}"><button type="button">Retourner</button></a>
+                <button type="submit" >Signup</button>
+                <a href="{% url 'login' %}"><button type="button">Back</button></a>
             </form>
+            {% if has_error %}
+                <p>Invalid form:</p>
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                {% endfor %}
+            {% endif %}
         </td>
     </tr>
 </table>
