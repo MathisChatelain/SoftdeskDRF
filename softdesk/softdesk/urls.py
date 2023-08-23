@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework import routers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.schemas import get_schema_view
 from django.contrib.auth.views import LoginView, LogoutView
@@ -14,12 +13,20 @@ from project.views import (
     CommentViewset,
 )
 
-router = routers.DefaultRouter()
-router.register("customuser", CustomUserViewset, basename="customuser")
-router.register("contributor", ContributorViewset, basename="contributor")
-router.register("issue", IssueViewset, basename="issue")
-router.register("comment", CommentViewset, basename="comment")
-router.register("project", ProjectViewset, basename="project")
+from rest_framework_nested import routers
+
+# Main router for ParentModel
+main_router = routers.DefaultRouter()
+main_router.register(r"project", ProjectViewset, basename="project")
+
+# main_router.register(r"customuser", CustomUserViewset, basename="customuser")
+# main_router.register(r"contributor", ContributorViewset, basename="contributor")
+# main_router.register(r"issue", IssueViewset, basename="issue")
+# main_router.register(r"comment", CommentViewset, basename="comment")
+
+# Nested router for ChildModel within ParentModel
+nested_router = routers.NestedSimpleRouter(main_router, r"project", lookup='project')
+nested_router.register(r'contributor', ContributorViewset, basename='project-contributors')
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -27,7 +34,8 @@ urlpatterns = [
     path("", LoginView.as_view(), name="login", kwargs={"next_page": "/api/"}),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("signup/", signup, name="signup"),
-    path("api/", include(router.urls)),
+    path("api/", include(main_router.urls)),
+    path('api/', include(nested_router.urls)),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path(
