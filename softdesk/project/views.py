@@ -10,6 +10,7 @@ from project.serializers import (
 )
 from rest_framework_simplejwt.serializers import TokenObtainSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from django.db.models import Q
 from django.contrib.auth import authenticate
 from django.shortcuts import redirect, render
 
@@ -57,7 +58,12 @@ class ProjectViewset(ModelViewSet):
     serializer_class = ProjectSerializer
 
     def get_queryset(self):
-        return Project.objects.all()
+        if self.request.user.is_superuser:
+            return Project.objects.all()
+        else:
+            Project.objects.filter(
+                Q(contributors__user=self.request.user) | Q(author=self.request.user)
+            ).distinct()
 
 
 class CustomUserViewset(ReadOnlyModelViewSet):
