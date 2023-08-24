@@ -17,16 +17,16 @@ from rest_framework_nested import routers
 
 # Main router for ParentModel
 main_router = routers.DefaultRouter()
-main_router.register(r"project", ProjectViewset, basename="project")
+main_router.register(r"projects", ProjectViewset, basename="project")
 
-# main_router.register(r"customuser", CustomUserViewset, basename="customuser")
+main_router.register(r"customuser", CustomUserViewset, basename="customuser")
 # main_router.register(r"contributor", ContributorViewset, basename="contributor")
 # main_router.register(r"issue", IssueViewset, basename="issue")
 # main_router.register(r"comment", CommentViewset, basename="comment")
 
 # Nested router for ChildModel within ParentModel
-nested_router = routers.NestedSimpleRouter(main_router, r"project", lookup='project')
-nested_router.register(r'contributor', ContributorViewset, basename='project-contributors')
+project_router = routers.NestedSimpleRouter(main_router, r"projects", lookup="project")
+project_router.register(r"contributors", ContributorViewset, basename="contributors")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -35,7 +35,7 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout"),
     path("signup/", signup, name="signup"),
     path("api/", include(main_router.urls)),
-    path('api/', include(nested_router.urls)),
+    path("api/", include(project_router.urls)),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path(

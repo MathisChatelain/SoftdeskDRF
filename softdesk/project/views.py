@@ -12,7 +12,8 @@ from rest_framework_simplejwt.serializers import TokenObtainSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.db.models import Q
 from django.contrib.auth import authenticate
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
+from rest_framework.response import Response
 
 
 def signup(request):
@@ -54,18 +55,6 @@ def signup(request):
     )
 
 
-class ProjectViewset(ModelViewSet):
-    serializer_class = ProjectSerializer
-
-    def get_queryset(self):
-        if self.request.user.is_superuser:
-            return Project.objects.all()
-        else:
-            Project.objects.filter(
-                Q(contributors__user=self.request.user) | Q(author=self.request.user)
-            ).distinct()
-
-
 class CustomUserViewset(ReadOnlyModelViewSet):
     serializer_class = CustomUserSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
@@ -74,12 +63,44 @@ class CustomUserViewset(ReadOnlyModelViewSet):
         return CustomUser.objects.all()
 
 
+class ProjectViewset(ModelViewSet):
+    serializer_class = ProjectSerializer
+    queryset = Project.objects.all()
+
+    def list(
+        self,
+        request,
+    ):
+        queryset = Project.objects.filter()
+        serializer = ProjectSerializer(
+            queryset, many=True, context={"request": request}
+        )
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        queryset = Project.objects.filter()
+        project = get_object_or_404(queryset, pk=pk)
+        serializer = ProjectSerializer(project, context={"request": request})
+        return Response(serializer.data)
+
+
 class ContributorViewset(ModelViewSet):
     serializer_class = ContributorSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
+    queryset = Contributor.objects.all()
 
-    def get_queryset(self):
-        return Contributor.objects.all()
+    def list(self, request, project_pk=None):
+        queryset = Contributor.objects.filter(project=project_pk)
+        serializer = ContributorSerializer(
+            queryset, many=True, context={"request": request}
+        )
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None, project_pk=None):
+        queryset = Contributor.objects.filter(pk=pk, project=project_pk)
+        contributor = get_object_or_404(queryset, pk=pk)
+        serializer = ContributorSerializer(contributor, context={"request": request})
+        return Response(serializer.data)
 
 
 class IssueViewset(ModelViewSet):
