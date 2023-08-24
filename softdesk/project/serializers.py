@@ -35,23 +35,31 @@ class CustomUserSignupSerializer(CustomUserSerializer):
         )
 
 
-class ProjectSerializer(HyperlinkedModelSerializer):
-    """Return a project serializer with every field."""
-
-    class Meta:
-        model = Project
-        fields = "__all__"
-
-
 class ContributorSerializer(NestedHyperlinkedModelSerializer):
     """Return a contributor serializer with every field."""
 
     parent_lookup_kwargs = {
-        "project_pk": "project",
+        "project_pk": "project__uuid",
     }
 
     class Meta:
         model = Contributor
+        fields = "__all__"
+
+
+class ContributorURLSerializer(ContributorSerializer):
+    class Meta:
+        model = Contributor
+        fields = ("url",)
+
+
+class ProjectSerializer(HyperlinkedModelSerializer):
+    """Return a project serializer with every field."""
+
+    contributors = ContributorURLSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Project
         fields = "__all__"
 
 

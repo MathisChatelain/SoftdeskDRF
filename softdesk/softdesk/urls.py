@@ -26,7 +26,7 @@ main_router.register(r"customuser", CustomUserViewset, basename="customuser")
 
 # Nested router for ChildModel within ParentModel
 project_router = routers.NestedSimpleRouter(main_router, r"projects", lookup="project")
-project_router.register(r"contributors", ContributorViewset, basename="contributors")
+project_router.register(r"contributors", ContributorViewset, basename="contributor")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
