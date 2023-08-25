@@ -1,7 +1,8 @@
-from rest_framework.serializers import HyperlinkedModelSerializer
+from rest_framework.serializers import HyperlinkedModelSerializer, SerializerMethodField
 from rest_framework.fields import CharField
 from project.models import Comment, Contributor, CustomUser, Issue, Project
 from rest_framework_nested.serializers import NestedHyperlinkedModelSerializer
+from django.urls import reverse_lazy
 
 
 class CustomUserSerializer(HyperlinkedModelSerializer):
@@ -57,7 +58,7 @@ class ContributorURLSerializer(ContributorSerializer):
 
     class Meta:
         model = Contributor
-        fields = ("base_url", "url")
+        fields = ("url",)
 
 
 class IssueSerializer(NestedHyperlinkedModelSerializer):
@@ -93,6 +94,12 @@ class ProjectSerializer(HyperlinkedModelSerializer):
 
     contributors = ContributorURLSerializer(many=True, read_only=True)
     issues = IssueURLSerializer(many=True, read_only=True)
+    contributors_url = SerializerMethodField()
+
+    def get_contributors_url(self, obj):
+        request = self.context.get("request")
+        if request is not None:
+            return f"{request.build_absolute_uri('/')}{reverse_lazy('contributor-list', args=[obj.uuid])}"
 
     class Meta:
         model = Project
@@ -101,6 +108,7 @@ class ProjectSerializer(HyperlinkedModelSerializer):
             "name",
             "description",
             "contributors",
+            "contributors_url",
             "issues",
             "url",
         )

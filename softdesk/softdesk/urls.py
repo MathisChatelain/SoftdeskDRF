@@ -3,6 +3,7 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.schemas import get_schema_view
 from django.contrib.auth.views import LoginView, LogoutView
+from django.urls import reverse, resolve
 
 from project.views import (
     signup,
@@ -49,3 +50,23 @@ urlpatterns = [
         name="openapi-schema",
     ),
 ]
+
+
+def get_url_names():
+    url_names = []
+    url_patterns = urlpatterns  # Get the root URL patterns
+
+    def extract_url_names(patterns):
+        for pattern in patterns:
+            if hasattr(pattern, "url_patterns"):  # If it's a namespace, descend into it
+                extract_url_names(pattern.url_patterns)
+            elif hasattr(pattern, "name") and pattern.name is not None:
+                url_names.append(pattern)
+
+    extract_url_names(url_patterns)
+    return url_names
+
+
+all_url_names = get_url_names()
+for name in all_url_names:
+    print(name.name)
