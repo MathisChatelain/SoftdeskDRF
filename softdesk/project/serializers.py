@@ -2,7 +2,6 @@ from rest_framework.serializers import HyperlinkedModelSerializer
 from rest_framework.fields import CharField
 from project.models import Comment, Contributor, CustomUser, Issue, Project
 from rest_framework_nested.serializers import NestedHyperlinkedModelSerializer
-from rest_framework_nested.relations import NestedHyperlinkedRelatedField
 
 
 class CustomUserSerializer(HyperlinkedModelSerializer):
@@ -15,8 +14,14 @@ class CustomUserSerializer(HyperlinkedModelSerializer):
             "username",
             "age",
             "can_be_contacted",
-            "can_data_beshared",
+            "can_data_be_shared",
         )
+
+
+class CustomUserUsernameSerializer(CustomUserSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ("username",)
 
 
 class CustomUserSignupSerializer(CustomUserSerializer):
@@ -44,36 +49,66 @@ class ContributorSerializer(NestedHyperlinkedModelSerializer):
 
     class Meta:
         model = Contributor
-        fields = "__all__"
+        fields = ("user", "project")
 
 
 class ContributorURLSerializer(ContributorSerializer):
+    """Return a contributor serializer with only the url field."""
+
     class Meta:
         model = Contributor
-        fields = ("url",)
+        fields = ("base_url", "url")
 
 
-class ProjectSerializer(HyperlinkedModelSerializer):
-    """Return a project serializer with every field."""
-
-    contributors = ContributorURLSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Project
-        fields = "__all__"
-
-
-class IssueSerializer(HyperlinkedModelSerializer):
+class IssueSerializer(NestedHyperlinkedModelSerializer):
     """Return an issue serializer with every field."""
+
+    parent_lookup_kwargs = {
+        "project_pk": "project__uuid",
+    }
 
     class Meta:
         model = Issue
         fields = "__all__"
 
 
-class CommentSerializer(HyperlinkedModelSerializer):
+class IssueURLSerializer(IssueSerializer):
+    """Return an issue serializer with only the url field."""
+
+    class Meta:
+        model = Issue
+        fields = ("url",)
+
+
+class CommentSerializer(NestedHyperlinkedModelSerializer):
     """Return a comment serializer with every field."""
 
     class Meta:
         model = Comment
         fields = "__all__"
+
+
+class ProjectSerializer(HyperlinkedModelSerializer):
+    """Return a project serializer with every field. and it's nested contributors and issues"""
+
+    contributors = ContributorURLSerializer(many=True, read_only=True)
+    issues = IssueURLSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Project
+        fields = (
+            "uuid",
+            "name",
+            "description",
+            "contributors",
+            "issues",
+            "url",
+        )
+
+
+class ProjectListSerializer(ProjectSerializer):
+    """Return a project serializer with only the name and url field."""
+
+    class Meta:
+        model = Project
+        fields = ("name", "url")

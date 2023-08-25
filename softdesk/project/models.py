@@ -59,8 +59,12 @@ class Contributor(BaseModel):
     contributeur peut créer trois types de ressources: le project, l'issue et le comment.
     """
 
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="projects")
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="contributors")
+    user = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name="projects"
+    )
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE, related_name="contributors"
+    )
 
     class Meta:
         unique_together = ["user", "project"]
@@ -75,10 +79,13 @@ class Issue(BaseModel):
 
     status = models.CharField(max_length=128)
     priority = models.CharField(max_length=128)
-    assignee = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="assignee")
+    assignee = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name="assignee"
+    )
     tag = models.CharField(max_length=128)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="issues")
-    contributor = models.ForeignKey("Contributor", on_delete=models.CASCADE)
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE, related_name="issues"
+    )
 
 
 class Comment(BaseModel):

@@ -2,10 +2,13 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from project.models import Project, CustomUser, Contributor, Issue, Comment
 from project.serializers import (
     ProjectSerializer,
+    ProjectListSerializer,
     CustomUserSerializer,
     CustomUserSignupSerializer,
+    CustomUserUsernameSerializer,
     ContributorSerializer,
     IssueSerializer,
+    IssueURLSerializer,
     CommentSerializer,
 )
 from rest_framework_simplejwt.serializers import TokenObtainSerializer
@@ -14,6 +17,8 @@ from django.db.models import Q
 from django.contrib.auth import authenticate
 from django.shortcuts import redirect, render, get_object_or_404
 from rest_framework.response import Response
+from rest_framework.decorators import action
+from rest_framework.renderers import BrowsableAPIRenderer
 
 
 def signup(request):
@@ -72,7 +77,7 @@ class ProjectViewset(ModelViewSet):
         request,
     ):
         queryset = Project.objects.filter()
-        serializer = ProjectSerializer(
+        serializer = ProjectListSerializer(
             queryset, many=True, context={"request": request}
         )
         return Response(serializer.data)
@@ -106,9 +111,20 @@ class ContributorViewset(ModelViewSet):
 class IssueViewset(ModelViewSet):
     serializer_class = IssueSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
+    queryset = Issue.objects.all()
 
-    def get_queryset(self):
-        return Issue.objects.all()
+    def list(self, request, project_pk=None):
+        queryset = Issue.objects.filter(project=project_pk)
+        serializer = IssueURLSerializer(
+            queryset, many=True, context={"request": request}
+        )
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None, project_pk=None):
+        queryset = Issue.objects.filter(pk=pk, project=project_pk)
+        issue = get_object_or_404(queryset, pk=pk)
+        serializer = IssueSerializer(issue, context={"request": request})
+        return Response(serializer.data)
 
 
 class CommentViewset(ModelViewSet):
