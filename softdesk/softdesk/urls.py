@@ -22,14 +22,15 @@ main_router.register(r"projects", ProjectViewset, basename="project")
 main_router.register(r"customuser", CustomUserViewset, basename="customuser")
 
 # Nested router for ChildModels within Project
-project_router = routers.NestedSimpleRouter(main_router, r"projects", lookup="project")
-project_router.register(r"contributors", ContributorViewset, basename="contributor")
-project_router.register(r"issues", IssueViewset, basename="issue")
+project_router = routers.NestedDefaultRouter(main_router, r"projects", lookup="project")
+project_router.register(
+    r"contributors", ContributorViewset, basename="project-contributor"
+)
+project_router.register(r"issues", IssueViewset, basename="project-issue")
 
 
-# same for Project > Issues > Comments ect...
-# issue_router = routers.NestedSimpleRouter(project_router, r"issues", lookup="issue")
-# issue_router.register(r"comments", CommentViewset, basename="comment")
+issue_router = routers.NestedDefaultRouter(project_router, r"issues", lookup="issue")
+issue_router.register(r"comments", CommentViewset, basename="comment")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -39,7 +40,7 @@ urlpatterns = [
     path("signup/", signup, name="signup"),
     path("api/", include(main_router.urls)),
     path("api/", include(project_router.urls)),
-    # path("api/", include(issue_router.urls)),
+    path("api/", include(issue_router.urls)),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path(

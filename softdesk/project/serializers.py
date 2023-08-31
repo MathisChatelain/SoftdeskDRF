@@ -1,18 +1,24 @@
-from rest_framework.serializers import HyperlinkedModelSerializer, SerializerMethodField
+from rest_framework.serializers import (
+    HyperlinkedModelSerializer,
+    SerializerMethodField,
+    ModelSerializer,
+)
 from rest_framework.fields import CharField
 from project.models import Comment, Contributor, CustomUser, Issue, Project
 from rest_framework_nested.serializers import NestedHyperlinkedModelSerializer
 from django.urls import reverse_lazy
 
 
-class CustomUserSerializer(HyperlinkedModelSerializer):
+class CustomUserSerializer(ModelSerializer):
     """Return a custom user serializer with every field."""
 
     class Meta:
         model = CustomUser
         fields = (
             "uuid",
+            "url",
             "username",
+            "projects",
             "age",
             "can_be_contacted",
             "can_data_be_shared",
@@ -45,7 +51,8 @@ class ContributorSerializer(NestedHyperlinkedModelSerializer):
     """Return a contributor serializer with every field."""
 
     parent_lookup_kwargs = {
-        "project_pk": "project__uuid",
+        "project": "project__uuid",
+        "customuser": "customuser__uuid",
     }
 
     class Meta:
@@ -65,7 +72,7 @@ class IssueSerializer(NestedHyperlinkedModelSerializer):
     """Return an issue serializer with every field."""
 
     parent_lookup_kwargs = {
-        "project_pk": "project__uuid",
+        "project": "pk",
     }
 
     class Meta:
@@ -89,17 +96,32 @@ class CommentSerializer(NestedHyperlinkedModelSerializer):
         fields = "__all__"
 
 
+class CommentURLSerializer(CommentSerializer):
+    """Return a comment serializer with only the url field."""
+
+    class Meta:
+        model = Comment
+        fields = ("url",)
+
+
 class ProjectSerializer(HyperlinkedModelSerializer):
     """Return a project serializer with every field. and it's nested contributors and issues"""
 
-    contributors = ContributorURLSerializer(many=True, read_only=True)
-    issues = IssueURLSerializer(many=True, read_only=True)
-    contributors_url = SerializerMethodField()
+    # method field to get the url of the contributors
+    contributors = SerializerMethodField()
 
-    def get_contributors_url(self, obj):
+    # method field to get the url of the issues
+    issues = SerializerMethodField()
+
+    def get_contributors(self, obj):
         request = self.context.get("request")
         if request is not None:
-            return f"{request.build_absolute_uri('/')}{reverse_lazy('contributor-list', args=[obj.uuid])}"
+            return f"{request.build_absolute_uri('/')[:-1]}{reverse_lazy('project-contributor-list', args=[obj.uuid])}"
+
+    def get_issues(self, obj):
+        request = self.context.get("request")
+        if request is not None:
+            return f"{request.build_absolute_uri('/')[:-1]}{reverse_lazy('project-issue-list', args=[obj.uuid])}"
 
     class Meta:
         model = Project
@@ -108,9 +130,8 @@ class ProjectSerializer(HyperlinkedModelSerializer):
             "name",
             "description",
             "contributors",
-            "contributors_url",
             "issues",
-            "url",
+            "author",
         )
 
 
