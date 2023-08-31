@@ -76,13 +76,15 @@ class ContributorViewset(ModelViewSet):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get_queryset(self):
-        return Contributor.objects.filter(project=self.kwargs["project_uuid"])
+        return Contributor.objects.filter(project=self.kwargs["project_pk"])
 
 
 class IssueViewset(ModelViewSet):
     serializer_class = IssueSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
-    queryset = Issue.objects.all()
+
+    def get_queryset(self):
+        return Issue.objects.filter(project=self.kwargs["project_pk"])
 
 
 class CommentViewset(ModelViewSet):
