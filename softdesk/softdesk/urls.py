@@ -32,8 +32,8 @@ project_router.register(
 project_router.register(r"issues", IssueViewset, basename="project-issues")
 
 
-# issue_router = routers.NestedDefaultRouter(project_router, r"issues", lookup="issue")
-# issue_router.register(r"comments", CommentViewset, basename="comment")
+issue_router = routers.NestedDefaultRouter(project_router, r"issues", lookup="issue")
+issue_router.register(r"comments", CommentViewset, basename="comment")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -43,7 +43,7 @@ urlpatterns = [
     path("signup/", signup, name="signup"),
     path(r"api/", include(main_router.urls)),
     path(r"api/", include(project_router.urls)),
-    # path(r"api/", include(issue_router.urls)),
+    path(r"api/", include(issue_router.urls)),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path(

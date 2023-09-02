@@ -144,12 +144,5 @@ class ProjectSerializer(HyperlinkedModelSerializer):
             "issues_list_url",
             "issues",
             "author",
+            "project_type",
         )
-
-
-class ProjectListSerializer(ProjectSerializer):
-    """Return a project serializer with only the name and url field."""
-
-    class Meta:
-        model = Project
-        fields = ("name", "url")

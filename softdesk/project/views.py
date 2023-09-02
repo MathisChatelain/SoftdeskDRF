@@ -1,24 +1,21 @@
-from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+from rest_framework.viewsets import ModelViewSet
 from project.models import Project, CustomUser, Contributor, Issue, Comment
 from project.serializers import (
     ProjectSerializer,
-    ProjectListSerializer,
     CustomUserSerializer,
     CustomUserSignupSerializer,
-    CommentURLSerializer,
     ContributorSerializer,
     IssueSerializer,
-    IssueURLSerializer,
     CommentSerializer,
 )
 from rest_framework_simplejwt.serializers import TokenObtainSerializer
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from django.db.models import Q
+from rest_framework.permissions import (
+    IsAuthenticated,
+    IsAdminUser,
+)
 from django.contrib.auth import authenticate
-from django.shortcuts import redirect, render, get_object_or_404
-from rest_framework.response import Response
-from rest_framework.decorators import action
-from rest_framework.renderers import BrowsableAPIRenderer
+from django.shortcuts import redirect, render
+from project.permissions import shared_get_permissions
 
 
 def signup(request):
@@ -70,13 +67,20 @@ class ProjectViewset(ModelViewSet):
     serializer_class = ProjectSerializer
     queryset = Project.objects.all()
 
+    def get_permissions(self):
+        """Instantiates and returns the list of permissions that this view requires."""
+        return shared_get_permissions(self)
+
 
 class ContributorViewset(ModelViewSet):
     serializer_class = ContributorSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get_queryset(self):
-        return Contributor.objects.filter(project=self.kwargs["project_pk"])
+        if self.kwargs.get("project_pk"):
+            return Contributor.objects.filter(project=self.kwargs["project_pk"])
+        # list of contributors case
+        return Contributor.objects.all()
 
 
 class IssueViewset(ModelViewSet):
@@ -84,10 +88,18 @@ class IssueViewset(ModelViewSet):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get_queryset(self):
-        return Issue.objects.filter(project=self.kwargs["project_pk"])
+        if self.kwargs.get("project_pk"):
+            return Issue.objects.filter(project=self.kwargs["project_pk"])
+        # list of issues case
+        return Issue.objects.all()
 
 
 class CommentViewset(ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
-    queryset = Comment.objects.all()
+
+    def get_queryset(self):
+        if self.kwargs.get("issue_pk"):
+            return Comment.objects.filter(issue=self.kwargs["issue_pk"])
+        # list of comments case
+        return Comment.objects.all()

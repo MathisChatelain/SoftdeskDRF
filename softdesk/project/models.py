@@ -4,6 +4,29 @@ from datetime import datetime
 from uuid import uuid4
 
 
+class CustomUser(User):
+    """
+    Définit les utilisateurs, avec leur âge, leur choix de consentement
+    Les données d'authentification sont gérées par Django
+    """
+
+    uuid = models.UUIDField(
+        primary_key=True, editable=False, unique=True, default=uuid4()
+    )
+    age = models.IntegerField(null=True)
+    can_be_contacted = models.BooleanField(default=False)
+    can_data_be_shared = models.BooleanField(default=False)
+    created_at = models.DateTimeField(editable=False, default=datetime.now())
+    updated_at = models.DateTimeField(default=datetime.now())
+
+    def save(self, *args, **kwargs):
+        """On save, update timestamps"""
+        if not self.uuid:
+            self.created_at = datetime.now()
+        self.updated_at = datetime.now()
+        return super(CustomUser, self).save(*args, **kwargs)
+
+
 class BaseModel(models.Model):
     """
     Classe abstraite qui définit les champs communs à tous les modèles.
@@ -14,6 +37,7 @@ class BaseModel(models.Model):
     )
     created_at = models.DateTimeField(editable=False, default=datetime.now())
     updated_at = models.DateTimeField(default=datetime.now())
+    author = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
 
     def save(self, *args, **kwargs):
         """On save, update timestamps"""
@@ -24,17 +48,7 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
-
-
-class CustomUser(User, BaseModel):
-    """
-    Définit les utilisateurs, avec leur âge, leur choix de consentement
-    Les données d'authentification sont gérées par Django
-    """
-
-    age = models.IntegerField(null=True)
-    can_be_contacted = models.BooleanField(default=False)
-    can_data_be_shared = models.BooleanField(default=False)
+        ordering = ["-created_at"]
 
 
 class Project(BaseModel):
@@ -46,10 +60,17 @@ class Project(BaseModel):
     name = models.CharField(max_length=128)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    author = models.ForeignKey(
-        CustomUser, on_delete=models.CASCADE, related_name="author"
-    )
     description = models.TextField()
+
+    PROJECT_TYPE_CHOICES = [
+        ("BACKEND", "Backend"),
+        ("FRONTEND", "Frontend"),
+        ("IOS", "iOS"),
+        ("ANDROID", "Android"),
+    ]
+    project_type = models.CharField(
+        max_length=128, choices=PROJECT_TYPE_CHOICES, default="BACKEND"
+    )
 
 
 class Contributor(BaseModel):
@@ -77,15 +98,35 @@ class Issue(BaseModel):
     Un project peut posséder plusieurs issues, mais une issue n'est rattachée qu'à un seul project.
     """
 
-    status = models.CharField(max_length=128)
-    priority = models.CharField(max_length=128)
     assignee = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE, related_name="assignee"
     )
-    tag = models.CharField(max_length=128)
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE, related_name="issues"
     )
+    # - Nous pouvons donner une priorité à l’issue (LOW, MEDIUM ou HIGH) pour connaître son importance.
+    PRIORITY_CHOICES = [
+        ("LOW", "Low"),
+        ("MEDIUM", "Medium"),
+        ("HIGH", "High"),
+    ]
+    priority = models.CharField(max_length=128, choices=PRIORITY_CHOICES, default="LOW")
+    # Nous pouvons aussi donner une balise (BUG, FEATURE ou TASK) pour connaître la nature de l’issue.
+    TAG_CHOICES = [
+        ("BUG", "Bug"),
+        ("FEATURE", "Feature"),
+        ("TASK", "Task"),
+    ]
+    tag = models.CharField(max_length=128, choices=TAG_CHOICES, default="FEATURE")
+
+    # - Enfin, les contributeurs doivent pouvoir émettre un statut de progression
+    # (ToDo, In Progress ou Finished). Par défaut, une issue est en To Do.
+    STATUS_CHOICES = [
+        ("TODO", "To Do"),
+        ("INPROGRESS", "In Progress"),
+        ("FINISHED", "Finished"),
+    ]
+    status = models.CharField(max_length=128, choices=STATUS_CHOICES, default="TODO")
 
 
 class Comment(BaseModel):
