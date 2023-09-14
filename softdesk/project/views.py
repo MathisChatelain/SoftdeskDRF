@@ -32,7 +32,7 @@ def signup(request):
                 password=form.data["password"],
             )
             if len(user) == 1:
-                TokenObtainSerializer(data=form.data)
+                TokenObtainSerializer(data=form.data).validate(form.data)
                 return redirect("/api/")
             else:
                 # We create the user if it does not exist
@@ -40,12 +40,13 @@ def signup(request):
                     username=form.data["username"],
                     password=form.data["password"],
                 )
+                # Django Authentication
                 authenticate(
                     username=form.data["username"],
                     password=form.data["password"],
                 )
-                TokenObtainSerializer(data=form.data)
-                user.save()
+                # DRF-SimpleJWT Authentication
+                TokenObtainSerializer(data=form.data).validate(form.data)
                 return redirect("/api/")
         else:
             message = "Please correct the errors below"
@@ -63,43 +64,39 @@ class CustomUserViewset(ModelViewSet):
     queryset = CustomUser.objects.all()
 
 
-class ProjectViewset(ModelViewSet):
-    serializer_class = ProjectSerializer
-    queryset = Project.objects.all()
-
+class PermissionMixin:
     def get_permissions(self):
         """Instantiates and returns the list of permissions that this view requires."""
         return shared_get_permissions(self)
 
 
-class ContributorViewset(ModelViewSet):
+class ProjectViewset(ModelViewSet, PermissionMixin):
+    serializer_class = ProjectSerializer
+    queryset = Project.objects.all()
+
+
+class ContributorViewset(ModelViewSet, PermissionMixin):
     serializer_class = ContributorSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get_queryset(self):
         if self.kwargs.get("project_pk"):
             return Contributor.objects.filter(project=self.kwargs["project_pk"])
-        # list of contributors case
-        return Contributor.objects.all()
+        return Contributor.objects.all()  # list of contributors case
 
 
-class IssueViewset(ModelViewSet):
+class IssueViewset(ModelViewSet, PermissionMixin):
     serializer_class = IssueSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get_queryset(self):
         if self.kwargs.get("project_pk"):
             return Issue.objects.filter(project=self.kwargs["project_pk"])
-        # list of issues case
-        return Issue.objects.all()
+        return Issue.objects.all()  # list of issues case
 
 
-class CommentViewset(ModelViewSet):
+class CommentViewset(ModelViewSet, PermissionMixin):
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get_queryset(self):
         if self.kwargs.get("issue_pk"):
             return Comment.objects.filter(issue=self.kwargs["issue_pk"])
-        # list of comments case
-        return Comment.objects.all()
+        return Comment.objects.all()  # list of comments case

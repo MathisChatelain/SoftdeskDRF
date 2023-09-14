@@ -58,44 +58,49 @@ class ContributorSerializer(HyperlinkedModelSerializer):
         fields = ("url", "user", "project")
 
 
-class ContributorURLSerializer(ContributorSerializer):
-    """Return a contributor serializer with only the url field."""
-
-    class Meta:
-        model = Contributor
-        fields = ("url",)
-
-
-class IssueSerializer(NestedHyperlinkedModelSerializer):
+class IssueSerializer(HyperlinkedModelSerializer):
     """Return an issue serializer with every field."""
 
+    comments = NestedHyperlinkedRelatedField(
+        many=True,
+        read_only=True,  # Or add a queryset
+        view_name="project-issues-detail-comments-list",
+        parent_lookup_kwargs={
+            "project_pk": "project__uuid",
+            "issue_pk": "uuid",
+        },
+    )
+
+    comments_list_url = SerializerMethodField("get_comments_list_url", read_only=True)
+
+    def get_comments_list_url(self, obj):
+        request = self.context.get("request")
+        if request is not None:
+            return (
+                f"{request.build_absolute_uri('/')[:-1]}{reverse_lazy('comment-list')}"
+            )
+
     class Meta:
         model = Issue
-        fields = "__all__"
+        fields = (
+            "url",
+            "project",
+            "assignee",
+            "author",
+            "status",
+            "tag",
+            "priority",
+            "comments",
+            "comments_list_url",
+        )
 
 
-class IssueURLSerializer(IssueSerializer):
-    """Return an issue serializer with only the url field."""
-
-    class Meta:
-        model = Issue
-        fields = ("url",)
-
-
-class CommentSerializer(NestedHyperlinkedModelSerializer):
+class CommentSerializer(HyperlinkedModelSerializer):
     """Return a comment serializer with every field."""
 
     class Meta:
         model = Comment
         fields = "__all__"
-
-
-class CommentURLSerializer(CommentSerializer):
-    """Return a comment serializer with only the url field."""
-
-    class Meta:
-        model = Comment
-        fields = ("url",)
 
 
 class ProjectSerializer(HyperlinkedModelSerializer):

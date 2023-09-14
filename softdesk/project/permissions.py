@@ -23,8 +23,9 @@ class isAuthor(BasePermission):
 def shared_get_permissions(self: ModelViewSet):
     if self.action == "list":
         permission_classes = [IsAuthenticated | IsAdminUser]
-    if self.action == "destroy":
+    if self.action in ["destroy", "update", "partial_update"]:
         permission_classes = [IsAdminUser | isAuthor]
     else:
+        # create, retrieve
         permission_classes = [IsAdminUser | isContributor | isAuthor]
     return [permission() for permission in permission_classes]

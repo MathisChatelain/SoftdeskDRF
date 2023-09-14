@@ -136,5 +136,5 @@ class Comment(BaseModel):
     """
 
     content = models.TextField()
-    issue = models.ForeignKey(Issue, on_delete=models.CASCADE)
+    issue = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name="comments")
     contributor = models.ForeignKey("Contributor", on_delete=models.CASCADE)

@@ -3,7 +3,6 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.schemas import get_schema_view
 from django.contrib.auth.views import LoginView, LogoutView
-from django.urls import reverse, resolve
 
 from project.views import (
     signup,
