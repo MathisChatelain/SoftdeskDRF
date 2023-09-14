@@ -6,7 +6,6 @@ from rest_framework.serializers import (
 from rest_framework.fields import CharField
 from project.models import Comment, Contributor, CustomUser, Issue, Project
 from rest_framework_nested.serializers import (
-    NestedHyperlinkedModelSerializer,
     NestedHyperlinkedRelatedField,
 )
 from django.urls import reverse_lazy
@@ -26,12 +25,6 @@ class CustomUserSerializer(ModelSerializer):
             "can_be_contacted",
             "can_data_be_shared",
         )
-
-
-class CustomUserUsernameSerializer(CustomUserSerializer):
-    class Meta:
-        model = CustomUser
-        fields = ("username",)
 
 
 class CustomUserSignupSerializer(CustomUserSerializer):
@@ -96,6 +89,13 @@ class IssueSerializer(HyperlinkedModelSerializer):
             "comments_list_url",
         )
 
+    def create(self, validated_data):
+        customuser = CustomUser.objects.get(
+            username=self.context["request"].user.username
+        )
+        validated_data["author"] = customuser
+        return super().create(validated_data)
+
 
 class CommentSerializer(HyperlinkedModelSerializer):
     """Return a comment serializer with every field."""
@@ -103,6 +103,13 @@ class CommentSerializer(HyperlinkedModelSerializer):
     class Meta:
         model = Comment
         fields = "__all__"
+
+    def create(self, validated_data):
+        customuser = CustomUser.objects.get(
+            username=self.context["request"].user.username
+        )
+        validated_data["author"] = customuser
+        return super().create(validated_data)
 
 
 class ProjectSerializer(HyperlinkedModelSerializer):
@@ -150,6 +157,18 @@ class ProjectSerializer(HyperlinkedModelSerializer):
             "contributors",
             "issues_list_url",
             "issues",
-            "author",
             "project_type",
         )
+
+    def create(self, validated_data):
+        """Create a project with the current user as the author and add him to contributors"""
+        print(self.context["request"].user.username)
+        customuser = CustomUser.objects.get(
+            username=self.context["request"].user.username
+        )
+
+        validated_data["author"] = customuser
+        project = super().create(validated_data)
+        contributor = Contributor.objects.create(user=customuser, project=project)
+        contributor.save()
+        return project
