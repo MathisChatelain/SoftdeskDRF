@@ -37,7 +37,8 @@ class CustomUserUsernameSerializer(CustomUserSerializer):
 class CustomUserSignupSerializer(CustomUserSerializer):
     """Return a custom user serializer with every field plus an additional confirm password field"""
 
-    password_confirmation = CharField()
+    password = CharField(style={"input_type": "password"})
+    password_confirmation = CharField(style={"input_type": "password"})
 
     class Meta:
         model = CustomUser
@@ -47,6 +48,7 @@ class CustomUserSignupSerializer(CustomUserSerializer):
             "password_confirmation",
             "can_be_contacted",
             "can_data_be_shared",
+            "age",
         )
 
 

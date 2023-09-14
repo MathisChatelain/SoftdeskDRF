@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator
 from datetime import datetime
 from uuid import uuid4
 
@@ -13,7 +14,9 @@ class CustomUser(User):
     uuid = models.UUIDField(
         primary_key=True, editable=False, unique=True, default=uuid4()
     )
-    age = models.IntegerField(null=True)
+    age = models.IntegerField(
+        null=True, validators=[MinValueValidator(15), MaxValueValidator(150)]
+    )
     can_be_contacted = models.BooleanField(default=False)
     can_data_be_shared = models.BooleanField(default=False)
     created_at = models.DateTimeField(editable=False, default=datetime.now())
